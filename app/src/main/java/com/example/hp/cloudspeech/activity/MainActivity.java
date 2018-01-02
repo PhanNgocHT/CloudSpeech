@@ -89,8 +89,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void getData() {
         //String data=txtSpeechInput.getText().toString();
         String data="tắt ti vi điều khiển bóng đèn cho tôi và điều khiển ti vi bật công tắc";
+        String dataControl="tăng độ sáng đến bảy mươi phần trăm và giảm độ sáng đến tám mươi phần trăm";
        // parse(data);
-        setContent(data);
+       // setContent(data);
+        setContentControl(dataControl);
     }
 
     private HashMap<String, String> parse(String input) {
@@ -102,7 +104,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 intent.add(a);
             }
         }
-
         for (String b : oj) {
             if (input.contains(b)) {
                 object.add(b);
@@ -116,7 +117,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Log.d(TAG, "Intent: "+key+" Object: "+hashMap.get(key));
         }
         return hashMap;
-
     }
 
     private ArrayList<IntentAction> setContent(String input) {
@@ -139,32 +139,42 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
        return arrContent;
     }
 
+    private ArrayList<IntentAction> setContentControl(String input) {
+        ArrayList<IntentAction> arrContentControl=new ArrayList<>();
+        ArrayList<KeySort> keySortActionControl=new ArrayList<>();
+        ArrayList<KeySort> keySortValue=new ArrayList<>();
+        ArrayList<KeySort> keySortLevel=new ArrayList<>();
+        keySortActionControl=setKeySort(actionControl, keySortActionControl, input);
+        keySortValue=setKeySort(value, keySortValue, input);
+        keySortLevel=setKeySort(level, keySortLevel, input);
+        int minSize=0;
+        if (keySortActionControl.size()<keySortValue.size()) {
+            minSize=keySortActionControl.size();
+        } else {
+            minSize=keySortValue.size();
+        }
+        if (minSize>keySortLevel.size()) {
+            minSize=keySortLevel.size();
+        }
+        for (int i=0; i<minSize; i++) {
+            IntentAction intentAction=new IntentAction(keySortActionControl.get(i).getValue(), keySortValue.get(i).getValue(), keySortLevel.get(i).getValue());
+            arrContentControl.add(intentAction);
+            Log.d(TAG, "ActionControl: "+intentAction.getActionControl()+"\tValue: "+intentAction.getValue()+"\tLevel: "+intentAction.getLevel());
+        }
+        return arrContentControl;
+    }
+
     private ArrayList<KeySort> setKeySort(String arrContent[], ArrayList<KeySort> keySorts, String input) {
         String contents=input;
         for (int i=0; i<arrContent.length; i++) {
             String content=arrContent[i].toString();
-            String space="";
             if (contents.contains(content)) {
                 int result=contents.indexOf(content);
-                String first;
-                String last;
-                if (result==0) {
-                    first="";
-                }else {
-                    first=contents.substring(0, result-1);
-                }
-                String between=contents.substring(result,result+content.length()-1);
-                for (int j=0; j<between.length(); j++) {
-                    space+=" ";
-                }
-                between=space;
-                if (result==contents.length()-content.length()) {
-                    last="";
-                }else {
-                    last=contents.substring(result+content.length());
-                }
-                contents=first.concat(between);
-                contents=contents.concat(last);
+                String firstContents=firstContents(result, contents);
+                String betweenContents=betweenContentsToSpaceContents(content, result, contents);
+                String lastContents=lastContents(content, result, contents);
+                contents=firstContents.concat(betweenContents);
+                contents=contents.concat(lastContents);
                 keySorts.add(new KeySort(result, content));
                 i=-1;
             }
@@ -183,4 +193,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Collections.sort(keySorts, comparator);
     }
 
+    private String firstContents(int result, String contents) {
+        String firstContent="";
+        if (result>0) {
+            firstContent=contents.substring(0, result-1);
+        }
+        return firstContent;
+    }
+
+    private String betweenContentsToSpaceContents(String content, int result, String contents) {
+        String space="";
+        String betweenContent=contents.substring(result,result+content.length()-1);
+        for (int j=0; j<betweenContent.length(); j++) {
+            space+=" ";
+        }
+        return space;
+    }
+
+    private String lastContents(String content, int result, String contents) {
+        String lastContent="";
+        if (result<contents.length()-content.length()) {
+            lastContent = contents.substring(result + content.length());
+        }
+        return lastContent;
+    }
 }
